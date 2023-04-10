@@ -1,0 +1,5 @@
+.vscode
+.history
+
+main.go
+*_test.go
