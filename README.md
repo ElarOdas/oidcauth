@@ -21,7 +21,7 @@ For now the intended user is only me.
 
 ### Develop
 
-Fell free to fork the project!
+Feel free to fork the project!
 
 ### Use
 
