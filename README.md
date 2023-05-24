@@ -42,8 +42,8 @@ The package consists of four elements
 -   Verifier( Offline | Online) Middleware
 
     -   Go chi compatible middleware
-    -   Verifies the token in the request header
-    -   Can also handle Offline/Online Slices
+    -   Verifies the token from the header, cookie or path query
+    -   Can also handle multiple issuers with Offline/Online Slices
 
 -   Authenticator Middleware
     -   Takes token & verification errors from Verifier
