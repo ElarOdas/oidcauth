@@ -1,59 +1,61 @@
 package offline
 
 import (
-	"errors"
 	"net/http"
 
+	"github.com/ElarOdas/oidcauth/findToken"
 	"github.com/ElarOdas/slices"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
 func VerifyOffline(off *Offline, r *http.Request) (jwt.Token, error) {
-	token, err := jwt.ParseRequest(r, jwt.WithKeySet(off.KeySet))
-	// Token is either missing (400), Key could not be found (401) or
+	// extract the keys from either Header,Cookie or Query
+	tokenString, err := findToken.FindToken(r, findToken.TokenFromHeader, findToken.TokenFromCookie, findToken.TokenFromQuery)
 	if err != nil {
 		return nil, ErrMissingAuthentication(err)
 	}
-
-	err = jwt.Validate(token, jwt.WithIssuer(off.Issuer), jwt.WithAudience(off.Audience))
-	if err != nil {
-		return nil, getValidationError(off.Issuer, err)
-	}
-
-	return token, nil
+	return parseAndValidate(off, tokenString)
 }
 func VerifyOfflineSlice(offs []*Offline, r *http.Request) (jwt.Token, error) {
-
-	unverifiedIssuer, err := extractUnverifiedIssuer(r)
-
-	// No iss in Token
+	// TODO
+	// extract the keys from either Header,Cookie or Query
+	tokenString, err := findToken.FindToken(r, findToken.TokenFromHeader, findToken.TokenFromCookie, findToken.TokenFromQuery)
 	if err != nil {
 		return nil, ErrMissingAuthentication(err)
 	}
-
-	off, err := findOffline(offs, unverifiedIssuer)
+	off, err := findOffline(offs, tokenString)
 	// iss not in available
 	if err != nil {
 		return nil, ErrMissingAuthentication(err)
 	}
+	return parseAndValidate(off, tokenString)
+}
 
-	token, err := jwt.ParseRequest(r, jwt.WithKeySet(off.KeySet))
+func parseAndValidate(off *Offline, tokenString string) (jwt.Token, error) {
+	// Verify sign of token
+	token, err := jwt.Parse([]byte(tokenString), jwt.WithKeySet(off.KeySet))
 	if err != nil {
 		return nil, ErrMissingAuthentication(err)
 	}
-	// ? Checking for Issuer unnecessary as we do it above
-	err = jwt.Validate(token, jwt.WithAudience(off.Audience))
+	// Verify content of token
+	err = jwt.Validate(token, jwt.WithIssuer(off.Issuer), jwt.WithAudience(off.Audience))
 	if err != nil {
-		return nil, getValidationError(off.Issuer, err)
+		return nil, interpretJWTError(off.Issuer, err)
 	}
 
 	return token, nil
 }
 
-func findOffline(offs []*Offline, issuer string) (*Offline, error) {
-	//? Filter or Search might be better
+func findOffline(offs []*Offline, tokenString string) (*Offline, error) {
+	// Get issuer from token
+	unverifiedIssuer, err := extractUnverifiedIssuer(tokenString)
+	// No iss in Token
+	if err != nil {
+		return nil, ErrMissingAuthentication(err)
+	}
+	// Search for the correct issuer
 	off, _ := slices.UnorderedReduceSlice(offs, func(off *Offline, basis *Offline) (*Offline, error) {
-		if off.Issuer != issuer {
+		if off.Issuer != unverifiedIssuer {
 			return basis, nil
 		}
 		return off, nil
@@ -64,8 +66,8 @@ func findOffline(offs []*Offline, issuer string) (*Offline, error) {
 	return off, nil
 }
 
-func extractUnverifiedIssuer(r *http.Request) (string, error) {
-	token, err := jwt.ParseRequest(r, jwt.WithVerify(false))
+func extractUnverifiedIssuer(tokenString string) (string, error) {
+	token, err := jwt.Parse([]byte(tokenString), jwt.WithVerify(false))
 	if err != nil {
 		return "", err
 	}
@@ -73,30 +75,4 @@ func extractUnverifiedIssuer(r *http.Request) (string, error) {
 		return "", jwt.ErrInvalidIssuer()
 	}
 	return token.Issuer(), nil
-}
-
-func getValidationError(issuer string, err error) error {
-
-	if errors.Is(err, jwt.ErrInvalidIssuer()) {
-		return ErrMissingAuthentication(err)
-	}
-	// 400
-	if errors.Is(err, jwt.ErrInvalidAudience()) {
-		return ErrInvalidRequest(issuer, "aud not satisfied", err)
-	}
-	if errors.Is(err, jwt.ErrInvalidJWT()) {
-		return ErrInvalidRequest(issuer, "token not yet valid", err)
-	}
-	// 401
-	if errors.Is(err, jwt.ErrInvalidIssuedAt()) {
-		return ErrInvalidToken(issuer, "invalid iat", err)
-	}
-	if errors.Is(err, jwt.ErrTokenExpired()) {
-		return ErrInvalidToken(issuer, "token expired", err)
-	}
-	if errors.Is(err, jwt.ErrTokenNotYetValid()) {
-		return ErrInvalidToken(issuer, "token not yet valid", err)
-	}
-
-	return err
 }
