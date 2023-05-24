@@ -18,10 +18,10 @@ type Offline struct {
 	KeySet      jwk.Set
 }
 
+// Create a new offline struct by querying the well-known endpoint of the issuer
 func New(issuer string, audience string, refreshPeriod time.Duration) (*Offline, error) {
-	//Query the well OIDC endpoint
+	//Query the well-known OIDC endpoint for key endpoint
 	keyEndpoint, err := endpoints.FetchKeyEndpoint(issuer)
-
 	if err != nil {
 		return nil, err
 	}
@@ -30,16 +30,18 @@ func New(issuer string, audience string, refreshPeriod time.Duration) (*Offline,
 		Audience:    audience,
 		KeyEndpoint: keyEndpoint,
 	}
+	//Query the key endpoint for keys in use by issuer
 	off.newCachedSet(refreshPeriod)
 	return off, nil
 }
 
+// Create a jwt keyset that renews itself every refreshPeriod
+// For more details see the jwx documentation
 func (off *Offline) newCachedSet(refreshPeriod time.Duration) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	c := jwk.NewCache(ctx)
-	// ? Give user the option for interval length
 	c.Register(off.KeyEndpoint.String(), jwk.WithMinRefreshInterval(refreshPeriod))
 	_, err := c.Refresh(ctx, off.KeyEndpoint.String())
 	if err != nil {
