@@ -1,6 +1,11 @@
 package offline
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+
+	"github.com/lestrrat-go/jwx/v2/jwt"
+)
 
 type InvalidRequestError struct {
 	message string
@@ -51,4 +56,30 @@ func (e *InsufficientScopeError) Error() string {
 
 func (e *InsufficientScopeError) Unwrap() error {
 	return e.err
+}
+
+func interpretJWTError(issuer string, err error) error {
+
+	if errors.Is(err, jwt.ErrInvalidIssuer()) {
+		return ErrMissingAuthentication(err)
+	}
+	// 400
+	if errors.Is(err, jwt.ErrInvalidAudience()) {
+		return ErrInvalidRequest(issuer, "aud not satisfied", err)
+	}
+	if errors.Is(err, jwt.ErrInvalidJWT()) {
+		return ErrInvalidRequest(issuer, "token not yet valid", err)
+	}
+	// 401
+	if errors.Is(err, jwt.ErrInvalidIssuedAt()) {
+		return ErrInvalidToken(issuer, "invalid iat", err)
+	}
+	if errors.Is(err, jwt.ErrTokenExpired()) {
+		return ErrInvalidToken(issuer, "token expired", err)
+	}
+	if errors.Is(err, jwt.ErrTokenNotYetValid()) {
+		return ErrInvalidToken(issuer, "token not yet valid", err)
+	}
+
+	return err
 }
