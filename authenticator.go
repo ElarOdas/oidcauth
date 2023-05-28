@@ -20,7 +20,7 @@ func Authenticator(logf func(v ...any)) func(http.Handler) http.Handler {
 			// Default
 
 			if err != nil {
-				logf("failed token auth:", err)
+				logf("failed token auth:", errors.Unwrap(err))
 				var invalidRequest *offline.InvalidRequestError
 				var invalidToken *offline.InvalidTokenError
 				//  400 invalid request
