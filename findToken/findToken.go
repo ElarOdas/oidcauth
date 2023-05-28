@@ -15,8 +15,8 @@ func FindToken(r *http.Request, findTokenFns ...func(r *http.Request) string) (s
 			break
 		}
 	}
-	if tokenString != "" {
-		return "", fmt.Errorf("Token not found with find functions")
+	if tokenString == "" {
+		return "", fmt.Errorf("token not found with find functions")
 	}
 
 	return tokenString, nil
