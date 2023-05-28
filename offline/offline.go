@@ -12,10 +12,11 @@ import (
 )
 
 type Offline struct {
-	Issuer      string
-	Audience    string
-	KeyEndpoint *url.URL
-	KeySet      jwk.Set
+	Issuer        string
+	Audience      string
+	KeyEndpoint   *url.URL
+	KeySet        jwk.Set
+	OutsideIssuer string
 }
 
 // Create a new offline struct by querying the well-known endpoint of the issuer
@@ -33,6 +34,10 @@ func New(issuer string, audience string, refreshPeriod time.Duration) (*Offline,
 	//Query the key endpoint for keys in use by issuer
 	off.newCachedSet(refreshPeriod)
 	return off, nil
+}
+
+func (off *Offline) SetOutsideIssuer(issuer string) {
+	off.OutsideIssuer = (strings.TrimRight(issuer, "/"))
 }
 
 // Create a jwt keyset that renews itself every refreshPeriod

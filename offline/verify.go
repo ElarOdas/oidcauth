@@ -38,9 +38,14 @@ func parseAndValidate(off *Offline, tokenString string) (jwt.Token, error) {
 		return nil, ErrMissingAuthentication(err)
 	}
 	// Verify content of token
-	err = jwt.Validate(token, jwt.WithIssuer(off.Issuer), jwt.WithAudience(off.Audience))
+	issuer := off.Issuer
+	if len(off.OutsideIssuer) != 0 {
+		issuer = off.OutsideIssuer
+	}
+
+	err = jwt.Validate(token, jwt.WithIssuer(issuer), jwt.WithAudience(off.Audience))
 	if err != nil {
-		return nil, interpretJWTError(off.Issuer, err)
+		return nil, interpretJWTError(issuer, err)
 	}
 
 	return token, nil
