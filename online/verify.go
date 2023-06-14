@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/ElarOdas/slices"
+	"github.com/PVolpert/slices"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 

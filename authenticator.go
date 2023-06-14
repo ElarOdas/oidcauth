@@ -6,7 +6,7 @@ import (
 
 	"net/http"
 
-	"github.com/ElarOdas/oidcauth/offline"
+	"github.com/PVolpert/oidcauth/offline"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 

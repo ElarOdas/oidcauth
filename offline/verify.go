@@ -3,8 +3,8 @@ package offline
 import (
 	"net/http"
 
-	"github.com/ElarOdas/oidcauth/findToken"
-	"github.com/ElarOdas/slices"
+	"github.com/PVolpert/oidcauth/findToken"
+	"github.com/PVolpert/slices"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 

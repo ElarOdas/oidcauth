@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/ElarOdas/oidcauth/endpoints"
+	"github.com/PVolpert/oidcauth/endpoints"
 )
 
 type Online struct {

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ElarOdas/oidcauth/endpoints"
+	"github.com/PVolpert/oidcauth/endpoints"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 )
 

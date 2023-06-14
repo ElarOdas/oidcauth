@@ -1,8 +1,8 @@
-module github.com/ElarOdas/oidcauth
+module github.com/PVolpert/oidcauth
 
 go 1.20
 
-require github.com/ElarOdas/slices v0.2.1
+require github.com/PVolpert/slices v0.2.2
 
 require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect

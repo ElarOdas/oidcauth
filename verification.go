@@ -5,8 +5,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/ElarOdas/oidcauth/offline"
-	// "github.com/ElarOdas/oidcauth/online"
+	"github.com/PVolpert/oidcauth/offline"
+	// "github.com/PVolpert/oidcauth/online"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
